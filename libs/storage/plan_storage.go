@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/diggerhq/digger/libs/locking/gcp"
 	"io"
 	"log"
 	"net/http"
@@ -13,6 +12,8 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/diggerhq/digger/libs/locking/gcp"
 
 	"github.com/google/go-github/v61/github"
 )
@@ -246,6 +247,14 @@ func NewPlanStorage(ghToken string, ghRepoOwner string, ghRepositoryName string,
 		}
 	case uploadDestination == "gitlab":
 	//TODO implement me
+	case uploadDestination == "azure":
+		account := strings.ToLower(os.Getenv("AZURE_STORAGE_ACCOUNT"))
+		container := strings.ToLower(os.Getenv("AZURE_STORAGE_CONTAINER"))
+		var err error
+		planStorage, err = NewAzurePlanStorage(account, container)
+		if err != nil {
+			return nil, fmt.Errorf("error while creating Azure plan storage: %v", err)
+		}
 	default:
 		log.Printf("unknown plan destination type %v, using noop", uploadDestination)
 		planStorage = &MockPlanStorage{}
